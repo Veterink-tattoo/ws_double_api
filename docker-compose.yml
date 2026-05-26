@@ -4,6 +4,8 @@ services:
   ws_double_api:
     build: .
     container_name: srv-double-api
+    cpus: 0.30
+    mem_limit: 250m
     restart: unless-stopped
     command: python main.py
     ulimits:
