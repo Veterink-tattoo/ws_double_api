@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  ws_double_api:
+    build: .
+    container_name: srv-double-api
+    restart: unless-stopped
+    command: python main.py
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      # Non-sensitive configuration directly in Compose (Zero .env)
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - ENVIRONMENT=production
+      - BLAZE_WS_URL=wss://api-gaming.blaze.bet.br/replication/?EIO=3&transport=websocket
+      
+      # Database and Cache configuration
+      - DB_U=u-st-22
+      - DB_N=db-v1
+      - DB_H=dat-st-22  # Postgres host
+      - R_H=mem-ca-88   # Redis host
+    secrets:
+      - s-p-22
+      - s-k-99
+      - s-d-admin
+      - s-d-internal
+    volumes:
+      - ./data:/app/data
+    networks:
+      - internal-99
+      - web
+    labels:
+      - "traefik.enable=true"
+      
+      # Router para API do Double (HTTPS externo)
+      - "traefik.http.routers.double-api.rule=Host(`api.vettipster.com.br`) && PathPrefix(`/double`)"
+      - "traefik.http.routers.double-api.entrypoints=websecure"
+      - "traefik.http.routers.double-api.tls=true"
+      - "traefik.http.routers.double-api.service=double-api-service"
+      - "traefik.http.routers.double-api.middlewares=rate-limit@file,secure-headers@file"
+      - "traefik.http.routers.double-api.priority=110"
+      - "traefik.http.services.double-api-service.loadbalancer.server.port=8000"
+
+secrets:
+  s-p-22:
+    file: ../../evolution-api/secrets/s-p-22.txt
+  s-k-99:
+    file: ../../evolution-api/secrets/s-k-99.txt
+  s-d-admin:
+    file: ./secrets/s-d-admin.txt
+  s-d-internal:
+    file: ./secrets/s-d-internal.txt
+
+networks:
+  internal-99:
+    external: true
+    name: evolution-api_internal-99
+  web:
+    external: true

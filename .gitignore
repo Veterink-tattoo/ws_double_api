@@ -1,0 +1,9 @@
+# Double API Gitignore
+secrets/
+data/
+.env
+__pycache__/
+*.pyc
+*.tar.gz
+*.zip
+*.enc
